@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="shortcut icon" href="../favicon.ico" />
+    <link rel="bookmark" href="../favicon.ico" />
+    <title>Document</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+    </style>
+    <script src="../src/three.js"></script>
+    <script src="../src/controller/OrbitControls.js"></script>
+    <script src="../src/objects/Lensflare.js"></script>
+    <script src="../src/libs/stats.min.js"></script>
+  </head>
+  <body></body>
+  <script>
+    var scene, camera, renderer, clock, controller, stats
+    var shader_material
+
+    init();
+    animate();
+
+    // - Functions -
+    function init() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color().setHSL( 0.51, 0.4, 0.01 );
+				scene.fog = new THREE.Fog( scene.background, 3500, 15000 );
+      clock = new THREE.Clock();
+      camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 15000 );
+			camera.position.z = 250;
+      renderer = new THREE.WebGLRenderer({
+        antialias: true, // 开启抗锯齿处理
+        alpha: true,
+      });
+      renderer.setClearColor(0xbfd1e5) // set sky color
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio)
+
+      var axisHelper = new THREE.AxesHelper(10);
+      scene.add(axisHelper);
+  
+
+      let loader = new THREE.TextureLoader();
+      let textureFlare0 = loader.load("https://mdn.alipayobjects.com/huamei_cwajh0/afts/img/A*cNiHQJ_iX8EAAAAAAAAAAAAADn19AQ/original");
+      let textureFlare3 = loader.load("https://mdn.alipayobjects.com/huamei_cwajh0/afts/img/A*wOepQKgdCoIAAAAAAAAAAAAADn19AQ/original");
+
+      addLight( 0.55, 0.9, 0.5, 5000, 0, - 1000 );
+      addLight( 0.08, 0.8, 0.5, 0, 0, - 1000 );
+      addLight( 0.995, 0.5, 0.9, 5000, 5000, - 1000 );
+
+				function addLight( h, s, l, x, y, z ) {
+
+					var light = new THREE.PointLight( 0xffffff, 1.5, 2000 );
+					light.color.setHSL( h, s, l );
+					light.position.set( x, y, z );
+					scene.add( light );
+
+					var lensflare = new THREE.Lensflare();
+					lensflare.addElement( new THREE.LensflareElement( textureFlare0, 700, 0, light.color ) );
+					lensflare.addElement( new THREE.LensflareElement( textureFlare3, 60, 0.6 ) );
+					lensflare.addElement( new THREE.LensflareElement( textureFlare3, 70, 0.7 ) );
+					lensflare.addElement( new THREE.LensflareElement( textureFlare3, 120, 0.9 ) );
+					lensflare.addElement( new THREE.LensflareElement( textureFlare3, 70, 1 ) );
+					light.add( lensflare );
+
+				}
+
+				// renderer
+
+      // 方向光2
+      var directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.9);
+      directionalLight2.position.set(-400, -200, -300);
+      scene.add(directionalLight2);
+      //环境光
+      var ambient = new THREE.AmbientLight(0x404040, 0.6);
+      scene.add(ambient);
+
+      stats = new Stats()
+      document.body.appendChild( stats.dom );
+
+      // --------
+  
+      var s = 250;
+      var geometry = new THREE.BoxBufferGeometry( s, s, s );
+      var material = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0xffffff, shininess: 50 } );
+
+      for ( var i = 0; i < 3000; i ++ ) {
+
+        var mesh = new THREE.Mesh( geometry, material );
+
+        mesh.position.x = 8000 * ( 2.0 * Math.random() - 1.0 );
+        mesh.position.y = 8000 * ( 2.0 * Math.random() - 1.0 );
+        mesh.position.z = 8000 * ( 2.0 * Math.random() - 1.0 );
+
+        mesh.rotation.x = Math.random() * Math.PI;
+        mesh.rotation.y = Math.random() * Math.PI;
+        mesh.rotation.z = Math.random() * Math.PI;
+
+        mesh.matrixAutoUpdate = false;
+        mesh.updateMatrix();
+
+        scene.add( mesh );
+
+      }
+      // --------
+      controller = new THREE.OrbitControls(camera, renderer.domElement);
+      controller.movementSpeed = 2500;
+      controller.rollSpeed = Math.PI / 6;
+      controller.autoForward = false;
+      controller.dragToLook = false;
+      document.body.appendChild(renderer.domElement);
+      window.onresize = onResize;
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+      stats.update();
+      controller.update(clock.getDelta());
+    }
+
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+  </script>
+</html>
